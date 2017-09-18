@@ -1,0 +1,60 @@
+DEFAULT_USER=$(whoami)
+plugins=(git osx gradle wd jsontools)
+
+if which pyenv > /dev/null; then eval "$(pyenv init -)"; fi
+
+eval $(docker-machine env default)
+
+dm-start() {
+  docker-machine start default
+  eval $(docker-machine env default)
+}
+
+export PATH=./node_modules/.bin:/Users/Dan/.npm-packages/bin:$PATH
+export EDITOR=vim
+
+
+eval "$(pyenv init -)"
+eval "$(pyenv virtualenv-init -)"
+
+alias erb=/usr/local/bin/erb
+alias gem=/usr/local/bin/gem
+alias irb=/usr/local/bin/irb
+alias rake=/usr/local/bin/rake
+alias rdoc=/usr/local/bin/rdoc
+alias ri=/usr/local/bin/ri
+alias ruby=/usr/local/bin/ruby
+
+export GROOVY_HOME=/usr/local/opt/groovy/libexec
+
+
+export NVM_DIR=~/.nvm
+source $(brew --prefix nvm)/nvm.sh
+
+alias cdgr="cd ~/Documents/git_repos"
+
+alias adb=~/Library/Android/sdk/platform-tools/adb
+export PATH=~/Library/Android/sdk/tools/bin:$PATH
+
+
+autoload -U add-zsh-hook
+load-nvmrc() {
+  local node_version="$(nvm version)"
+  local nvmrc_path="$(nvm_find_nvmrc)"
+
+  if [ -n "$nvmrc_path" ]; then
+    local nvmrc_node_version=$(nvm version "$(cat "${nvmrc_path}")")
+
+    if [ "$nvmrc_node_version" != "N/A" ] && [ "$nvmrc_node_version" != "$node_version" ]; then
+      nvm use 
+    fi
+  elif [ "$node_version" != "$(nvm version default)" ]; then
+    
+    nvm use default
+  fi
+}
+add-zsh-hook chpwd load-nvmrc
+
+#load-nvmrc
+export PATH="/usr/local/opt/gettext/bin:$PATH"
+alias rebuild-heroku="git reset HEAD~; git push -f heroku master"
