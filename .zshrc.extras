@@ -1,9 +1,13 @@
+if [ -f /etc/profile ]; then source /etc/profile; fi
+
 DEFAULT_USER=$(whoami)
+
+ZSH_THEME="hyperzsh"
 plugins=(git osx gradle wd jsontools)
 
-if which pyenv > /dev/null; then eval "$(pyenv init -)"; fi
-
-eval $(docker-machine env default)
+if [[ ! $(which docker-machine) ]]; then
+	eval $(docker-machine env default)
+fi
 
 dm-start() {
   docker-machine start default
@@ -13,29 +17,13 @@ dm-start() {
 export PATH=./node_modules/.bin:/Users/Dan/.npm-packages/bin:$PATH
 export EDITOR=vim
 
-
-eval "$(pyenv init -)"
-eval "$(pyenv virtualenv-init -)"
-
-alias erb=/usr/local/bin/erb
-alias gem=/usr/local/bin/gem
-alias irb=/usr/local/bin/irb
-alias rake=/usr/local/bin/rake
-alias rdoc=/usr/local/bin/rdoc
-alias ri=/usr/local/bin/ri
-alias ruby=/usr/local/bin/ruby
-
-export GROOVY_HOME=/usr/local/opt/groovy/libexec
-
+if [[ ! $(which pyenv) ]]; then
+	eval "$(pyenv init -)"
+	eval "$(pyenv virtualenv-init -)"
+fi
 
 export NVM_DIR=~/.nvm
 source $(brew --prefix nvm)/nvm.sh
-
-alias cdgr="cd ~/Documents/git_repos"
-
-alias adb=~/Library/Android/sdk/platform-tools/adb
-export PATH=~/Library/Android/sdk/tools/bin:$PATH
-
 
 autoload -U add-zsh-hook
 load-nvmrc() {
@@ -46,15 +34,14 @@ load-nvmrc() {
     local nvmrc_node_version=$(nvm version "$(cat "${nvmrc_path}")")
 
     if [ "$nvmrc_node_version" != "N/A" ] && [ "$nvmrc_node_version" != "$node_version" ]; then
-      nvm use 
+      nvm use
     fi
   elif [ "$node_version" != "$(nvm version default)" ]; then
-    
+
     nvm use default
   fi
 }
 add-zsh-hook chpwd load-nvmrc
 
 #load-nvmrc
-export PATH="/usr/local/opt/gettext/bin:$PATH"
 alias rebuild-heroku="git reset HEAD~; git push -f heroku master"
