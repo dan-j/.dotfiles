@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 if [ -f /etc/profile ]; then source /etc/profile; fi
 
 ### VARIABLES ###
@@ -11,6 +13,8 @@ BREW_URL=https://raw.githubusercontent.com/Homebrew/install/master/install
 
 DOTFILES_CLONE_URL=git@github.com:dan-j/.dotfiles.git
 
+VUNDLE_HOME=~/.vim/bundle/Vundle.vim
+
 ### PREREQUISTITES ###
 cli_tools_path=$(xcode-select -p)
 
@@ -21,7 +25,7 @@ fi
 
 ### INSTALL ###
 
-# /usr/bin/ruby -e "$(curl -fsSL $BREW_URL)"
+/usr/bin/ruby -e "$(curl -fsSL $BREW_URL)"
 
 BREW_TAPS="caskroom/cask caskroom/versions caskroom/fonts"
 
@@ -37,8 +41,13 @@ brew install $BREW_PACKAGES
 
 sh -c "$(wget ${OHMYZSH_URL} -O -)"
 
+# insert "source ~/.zshrc.extras" before sourcing oh-my-zsh
+sed -i '' '/source $ZSH\/oh-my-zsh.sh/i\
+source ~/.zshrc.extras\
+' ~/.zshrc
+
 # we always want a projects directory
-mkdir ${HOME}/projects
+mkdir -p ${HOME}/projects
 
 # setup 1password-cli
 echo -n "1Password Address: "; read one_password_addr
@@ -61,7 +70,17 @@ fi
 OP_SESSION_danandches=${token_1password} \
   op get document ssh_keys.tar.gz | tar x -C ${HOME}
 
-git clone ${DOTFILES_CLONE_URL} ${DOTFILES_HOME}
+if [[ ! -d ${DOTFILES_HOME} ]]; then
+  git clone ${DOTFILES_CLONE_URL} ${DOTFILES_HOME}
+fi
+
+# Setup vundle and install plugins
+if [ -d $VUNDLE_HOME ]; then
+  rm -rf $VUNDLE_HOME
+fi
+
+git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
+vim +VundleInstall +qall
 
 dotfiles=$(
   find ${DOTFILES_HOME} -name ".*" -maxdepth 1 -exec basename {} \; \
@@ -69,16 +88,15 @@ dotfiles=$(
     | grep -vE ".git(modules)?$"
 )
 
-for dotfile in dotfiles; do
+for dotfile in $dotfiles; do
   if [[ -a ${HOME}/$dotfile ]]; then
     mv ${HOME}/$dotfile ${HOME}/${dotfile}.bak
   fi
   ln -s ${DOTFILES_HOME}/$dotfile $HOME
 done
 
-# Setup vundle and install plugins
-git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
-vim +VundleInstall +qall
+# don't forget tmux.conf
+ln -s ${HOME}/.tmux/.tmux.conf ${HOME}
 
 # Specify the preferences directory
 defaults write com.googlecode.iterm2.plist PrefsCustomFolder -string "${DOTFILES_HOME}/iterm2"

@@ -2,8 +2,16 @@ if [ -f /etc/profile ]; then source /etc/profile; fi
 
 DEFAULT_USER=$(whoami)
 
-ZSH_THEME="hyperzsh"
 plugins=(git osx gradle wd jsontools)
+
+theme="hyperzsh"
+
+# only set ZSH_THEME if it exists
+theme_path=themes/${theme}.zsh-theme
+if [[ -f $ZSH/$theme_path ]] || [[ -f $ZSH/custom/$theme_path ]]; then
+	echo "Setting ZSH_THEME=$theme"
+	ZSH_THEME=$theme
+fi
 
 if [[ ! $(which docker-machine) ]]; then
 	eval $(docker-machine env default)
