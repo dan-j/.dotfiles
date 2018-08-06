@@ -31,9 +31,10 @@ filetype plugin indent on    " required
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 set backspace=indent,eol,start
-set number
+set number relativenumber
 set clipboard=unnamed
 set tabstop=4
+set shiftwidth=4
 set noswapfile
 
 syntax on
@@ -64,3 +65,4 @@ let g:ctrlp_user_command = ['.git', 'cd %s && git ls-files -co --exclude-standar
 "" TypeScript filetype recognition
 
 autocmd BufNewFile,BufRead *.ts setlocal filetype=typescript
+

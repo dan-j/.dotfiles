@@ -1,3 +1,7 @@
 [user]
 	name = dan-j
 	email = 5727701+dan-j@users.noreply.github.com
+[core]
+	autocrlf = input
+[push]
+	default = current
