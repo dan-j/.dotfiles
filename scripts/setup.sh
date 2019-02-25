@@ -30,8 +30,7 @@ fi
 BREW_TAPS="caskroom/cask caskroom/versions caskroom/fonts"
 
 CASK_PACKAGES="java8 atom iterm2 font-hack 1password 1password-cli alfred"
-# CASK_PACKAGES="1password-cli"
-BREW_PACKAGES="maven git zsh tmux wget jq node nvm python2 python3 pyenv"
+BREW_PACKAGES="maven gradle coreutils git zsh tmux wget jq node nvm python2 python3 pyenv httpie htop reattach-to-user-namespace yarn vim mongodb mysql kubernetes-helm kubernetes-cli jwt-cli"
 
 ### SETUP ###
 
