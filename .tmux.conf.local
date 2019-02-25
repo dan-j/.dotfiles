@@ -271,6 +271,9 @@ bind -n M-Down select-pane -D
 # start with mouse mode enabled
 set -g mouse on
 
+# scroll mode, provided by the nhdaly/tmux-better-mouse-mode
+set -g @scroll-speed-num-lines-per-scroll "1"
+
 # force Vi mode
 #   really you should export VISUAL or EDITOR environment variable, see manual
 #set -g status-keys vi
@@ -290,6 +293,7 @@ set -g mouse on
 set -g @tpm_plugins '          \
    tmux-plugins/tpm             \
    tmux-plugins/tmux-resurrect  \
+   nhdaly/tmux-better-mouse-mode \
 '
 
 # Initialize TMUX plugin manager (keep this line at the very bottom of tmux.conf)

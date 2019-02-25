@@ -5,3 +5,6 @@
 	autocrlf = input
 [push]
 	default = current
+[rerere]
+	enabled = true
+	autoupdate = true
