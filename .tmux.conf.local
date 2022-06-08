@@ -157,13 +157,13 @@ tmux_conf_theme_right_separator_sub=''  #   PowerlineSymbols.otf font
 #     - #{uptime_s}
 #     - #{username}
 #     - #{username_ssh}
-tmux_conf_theme_status_left=' ❐ #S | ↑#{?uptime_d, #{uptime_d}d,}#{?uptime_h, #{uptime_h}h,}#{?uptime_m, #{uptime_m}m,} '
+tmux_conf_theme_status_left='#(/bin/bash $HOME/.tmux/kube-tmux/kube.tmux 0 red cyan) | ❐ #S | ↑#{?uptime_d, #{uptime_d}d,}#{?uptime_h, #{uptime_h}h,}#{?uptime_m, #{uptime_m}m,} '
 tmux_conf_theme_status_right='#{prefix}#{pairing} #{?battery_status, #{battery_status},}#{?battery_bar, #{battery_bar},}#{?battery_percentage, #{battery_percentage},} , %R , %d %b | #{username}#{root} | #{hostname} '
 
 # status left style
-tmux_conf_theme_status_left_fg='#000000,#e4e4e4,#e4e4e4'  # black, white , white
-tmux_conf_theme_status_left_bg='#ffff00,#ff00af,#00afff'  # yellow, pink, white blue
-tmux_conf_theme_status_left_attr='bold,none,none'
+tmux_conf_theme_status_left_fg='#000000,#000000,#e4e4e4,#e4e4e4'  # white, black, white , white
+tmux_conf_theme_status_left_bg='#ffffff,#ffff00,#ff00af,#00afff'  # k8s-blue, yellow, pink, white blue
+tmux_conf_theme_status_left_attr='none,bold,none,none'
 
 # status right style
 tmux_conf_theme_status_right_fg='#8a8a8a,#e4e4e4,#000000' # light gray, white, black
@@ -261,8 +261,6 @@ bind -n M-Right select-pane -R
 bind -n M-Up select-pane -U
 bind -n M-Down select-pane -D
 
-
-
 # -- bottom customizations -----------------------------------------------------
 
 # increase history size
@@ -273,6 +271,8 @@ set -g mouse on
 
 # scroll mode, provided by the nhdaly/tmux-better-mouse-mode
 set -g @scroll-speed-num-lines-per-scroll "1"
+
+bind u run ~/.tmux/custom/tmux-url-select/tmux-url-select
 
 # force Vi mode
 #   really you should export VISUAL or EDITOR environment variable, see manual

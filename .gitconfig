@@ -8,3 +8,35 @@
 [rerere]
 	enabled = true
 	autoupdate = true
+[alias]
+    lg = log --decorate --pretty=oneline --abbrev-commit --no-merges --graph
+    a = add --all .
+    c = commit
+    d = diff
+    ds = diff --staged
+    s = status
+    ps = push
+    pf = push -f
+    pt = push --tags
+    pl = pull
+    pr = pull --rebase
+    diff = diff --color
+    add = add --all .
+    squash = '!sh git reset $(git merge-base master $(git rev-parse --abbrev-ref HEAD))'
+	grepall = "!f() { git grep $1 $(git rev-list --all); }; f"
+[url "git@gitlab.com:"]
+	insteadOf = https://gitlab.com/
+[url "git@github.com:versori/"]
+	insteadOf = https://github.com/versori/
+[url "git@github.com:troycommerce/"]
+	insteadOf = https://github.com/troycommerce/
+[pull]
+	rebase = true
+[remote "origin"]
+	fetch = +refs/pull/*:refs/remotes/origin/pull/*
+[url "git@mygit.com:"]
+	insteadof = https://mygit.com
+[init]
+	defaultBranch = main
+[include]
+	path = /Users/dan/.gitconfig-private
