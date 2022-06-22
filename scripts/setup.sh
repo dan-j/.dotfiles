@@ -8,12 +8,10 @@ if [ -f /etc/profile ]; then source /etc/profile; fi
 
 SCRIPTS_DIR=$(dirname ${BASH_SOURCE[0]})
 DOTFILES_HOME=${DOTFILES_HOME:-${HOME}/.dotfiles}
-OHMYZSH_URL=https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh
-BREW_URL=https://raw.githubusercontent.com/Homebrew/install/master/install
+OHMYZSH_URL=https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh
+BREW_URL=https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh
 
 DOTFILES_CLONE_URL=git@github.com:dan-j/.dotfiles.git
-
-VUNDLE_HOME=~/.vim/bundle/Vundle.vim
 
 ### PREREQUISTITES ###
 cli_tools_path=$(xcode-select -p)
@@ -25,17 +23,17 @@ fi
 
 ### INSTALL ###
 
-/usr/bin/ruby -e "$(curl -fsSL $BREW_URL)"
+/bin/bash -c "$(curl -fsSL $BREW_URL)"
 
 BREW_TAPS="caskroom/cask caskroom/versions caskroom/fonts"
 
-CASK_PACKAGES="java8 atom iterm2 font-hack 1password 1password-cli alfred"
-BREW_PACKAGES="maven gradle coreutils git zsh tmux wget jq node nvm python2 python3 pyenv httpie htop reattach-to-user-namespace yarn vim mongodb mysql kubernetes-helm kubernetes-cli jwt-cli"
+CASK_PACKAGES="java8 iterm2 font-hack 1password 1password-cli alfred"
+BREW_PACKAGES="coreutils git zsh tmux wget jq nvm python2 python3 pyenv httpie htop reattach-to-user-namespace yarn vim mongodb mysql kubernetes-helm kubernetes-cli jwt-cli"
 
 ### SETUP ###
 
 # echo $BREW_TAPS | xargs -n1 brew tap
-brew cask install $CASK_PACKAGES
+brew install --cask $CASK_PACKAGES
 brew install $BREW_PACKAGES
 
 sh -c "$(wget ${OHMYZSH_URL} -O -)"
@@ -73,13 +71,10 @@ if [[ ! -d ${DOTFILES_HOME} ]]; then
   git clone ${DOTFILES_CLONE_URL} ${DOTFILES_HOME}
 fi
 
-# Setup vundle and install plugins
-if [ -d $VUNDLE_HOME ]; then
-  rm -rf $VUNDLE_HOME
-fi
-
-git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
-vim +VundleInstall +qall
+# Setup vim Plug and install plugins
+curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
+    https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+vim +PlugInstall +qall
 
 dotfiles=$(
   find ${DOTFILES_HOME} -name ".*" -maxdepth 1 -exec basename {} \; \

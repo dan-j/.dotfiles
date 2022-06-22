@@ -24,12 +24,6 @@
     add = add --all .
     squash = '!sh git reset $(git merge-base master $(git rev-parse --abbrev-ref HEAD))'
 	grepall = "!f() { git grep $1 $(git rev-list --all); }; f"
-[url "git@gitlab.com:"]
-	insteadOf = https://gitlab.com/
-[url "git@github.com:versori/"]
-	insteadOf = https://github.com/versori/
-[url "git@github.com:troycommerce/"]
-	insteadOf = https://github.com/troycommerce/
 [pull]
 	rebase = true
 [remote "origin"]
@@ -39,4 +33,4 @@
 [init]
 	defaultBranch = main
 [include]
-	path = /Users/dan/.gitconfig-private
+	path = ~/.gitconfig.local

@@ -4,18 +4,6 @@ export NVM_DIR=${HOME}/.nvm
 export NVM_LAZY_LOAD=true
 export NVM_AUTO_USE=true
 
-DEFAULT_USER=$(whoami)
-
-plugins=(git osx gradle wd jsontools zsh-nvm kubectl completion zsh dotenv)
-
-theme="hyperzsh"
-
-# only set ZSH_THEME if it exists
-theme_path=themes/${theme}.zsh-theme
-if [[ -f $ZSH/$theme_path ]] || [[ -f $ZSH/custom/$theme_path ]]; then
-	ZSH_THEME=$theme
-fi
-
 export PATH=./node_modules/.bin:$PATH
 export EDITOR=vim
 
@@ -24,10 +12,9 @@ if [[ ! $(which pyenv) ]]; then
 	eval "$(pyenv virtualenv-init -)"
 fi
 
-alias rebuild-heroku="git reset HEAD~; git push -f heroku master"
 alias https="http --default-scheme https"
 export fpath=($HOME/.zsh-completions/gcloud-zsh-completion/src $fpath)
-export PATH="/usr/local/opt/openssl/bin:/Users/dan/Library/Python/3.7/bin:/usr/local/sbin:$PATH"
+export PATH="/usr/local/opt/openssl/bin:~/Library/Python/3.9/bin:/usr/local/sbin:$PATH"
 source $(dirname $(gem which colorls))/tab_complete.sh
 autoload -Uz compinit
 compinit
