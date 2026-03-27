@@ -28,9 +28,13 @@
 	rebase = true
 [remote "origin"]
 	fetch = +refs/pull/*:refs/remotes/origin/pull/*
-[url "git@mygit.com:"]
-	insteadof = https://mygit.com
 [init]
 	defaultBranch = main
 [include]
 	path = ~/.gitconfig.local
+[credential]
+	helper = 
+	helper = 
+	helper = /usr/local/share/gcm-core/git-credential-manager
+[credential "https://dev.azure.com"]
+	useHttpPath = true

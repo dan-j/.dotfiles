@@ -1,23 +1,50 @@
-if [ -f /etc/profile ]; then source /etc/profile; fi
-
-export NVM_DIR=${HOME}/.nvm
-export NVM_LAZY_LOAD=true
-export NVM_AUTO_USE=true
-
-export PATH=./node_modules/.bin:$PATH
+# generic env vars
 export EDITOR=vim
+export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#3c5d64"
+export USE_GKE_GCLOUD_AUTH_PLUGIN=true
+export XDG_CONFIG_HOME=$HOME/.config
+export GOPATH=${GOPATH-$(go env GOPATH)}
+export GOROOT=${GOROOT-$(go env GOROOT)}
+export GOPRIVATE=versori.dev,github.com/versori
 
+export PATH=$GOPATH/bin:$PATH
+export PATH=$GOROOT/misc/wasm:$PATH
+export PATH=/opt/homebrew/opt/gnu-sed/libexec/gnubin:$PATH
+
+# configure history
+setopt SHARE_HISTORY
+HISTFILE=$HOME/.zhistory
+SAVEHIST=1000
+HISTSIZE=999
+setopt HIST_EXPIRE_DUPS_FIRST
+
+
+# enable completion
+autoload -Uz compinit && compinit
+
+
+## configure additional tools
+
+# node
+nvm use node
+
+# pyenv
 if [[ ! $(which pyenv) ]]; then
 	eval "$(pyenv init -)"
 	eval "$(pyenv virtualenv-init -)"
 fi
 
-alias https="http --default-scheme https"
-export fpath=($HOME/.zsh-completions/gcloud-zsh-completion/src $fpath)
-export PATH="/usr/local/opt/openssl/bin:~/Library/Python/3.9/bin:/usr/local/sbin:$PATH"
-source $(dirname $(gem which colorls))/tab_complete.sh
-autoload -Uz compinit
-compinit
+# helm
 if [ $commands[helm] ]; then
   source <(helm completion zsh)
 fi
+
+
+## aliases
+alias https="http --default-scheme https"
+
+killp () {
+	lsof -i :$1 | tail +2 | awk '{print $2}' | xargs kill
+}
+
+alias gmtv="go mod tidy && go mod vendor"

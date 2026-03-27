@@ -290,11 +290,9 @@ bind u run ~/.tmux/custom/tmux-url-select/tmux-url-select
 #set -g status-position top
 
 # List of plugins
-set -g @tpm_plugins '          \
-   tmux-plugins/tpm             \
-   tmux-plugins/tmux-resurrect  \
-   nhdaly/tmux-better-mouse-mode \
-'
+set -g @plugin 'tmux-plugins/tpm'
+set -g @plugin 'tmux-plugins/tmux-resurrect'
+set -g @plugin 'tmux-plugins/tmux-better-mouse-mode'
 
 # Initialize TMUX plugin manager (keep this line at the very bottom of tmux.conf)
 run '~/.tmux/plugins/tpm/tpm'

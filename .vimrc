@@ -27,8 +27,8 @@ set shiftwidth=4
 set noswapfile
 
 syntax on
-set background=dark
-colorscheme solarized
+"set background=dark
+"colorscheme solarized
 
 "" syntastic configuration
 
