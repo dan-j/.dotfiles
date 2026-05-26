@@ -6,8 +6,14 @@ alias ll="ls -lrt"
 alias vim=nvim
 alias gmtv=go mod tidy && go mod vendor
 
-export HOMEBREW_PREFIX=~/homebrew
-export PATH=$PATH:$HOMEBREW_PREFIX/bin
+# Detect Homebrew location and put it on PATH.
+for _brew_prefix in /opt/homebrew /usr/local $HOME/homebrew; do
+  if [[ -x "$_brew_prefix/bin/brew" ]]; then
+    eval "$($_brew_prefix/bin/brew shellenv)"
+    break
+  fi
+done
+unset _brew_prefix
 
 source $(brew --prefix)/opt/zinit/zinit.zsh
 

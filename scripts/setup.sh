@@ -4,7 +4,7 @@
 #
 # Steps:
 #   1. Install macOS CLI tools (xcode-select)
-#   2. Install Homebrew into ~/homebrew (custom prefix)
+#   2. Install Homebrew (default location, or HOMEBREW_PREFIX if set)
 #   3. Install brew formulae and casks
 #   4. Symlink dotfiles into ~ and ~/.config
 #   5. Point iTerm2 at the prefs in this repo
@@ -28,19 +28,37 @@ if ! xcode-select -p &>/dev/null; then
 fi
 
 #
-# 2. Homebrew (custom prefix at ~/homebrew)
+# 2. Homebrew
 #
-if [[ -n ${HOMEBREW_PREFIX} ]]; then
-  echo "==> Installing Homebrew to ${HOMEBREW_PREFIX}"
-  mkdir -p "${HOMEBREW_PREFIX}"
-  curl -L https://github.com/Homebrew/brew/tarball/master \
-    | tar xz --strip 1 -C "${HOMEBREW_PREFIX}"
+# If HOMEBREW_PREFIX is set by the user before running, install via tarball
+# into that prefix (no sudo). Otherwise run the official installer, which
+# picks /opt/homebrew on Apple Silicon and /usr/local on Intel; we then
+# detect where it landed.
+#
+if [[ -n ${HOMEBREW_PREFIX:-} ]]; then
+  if [[ ! -x ${HOMEBREW_PREFIX}/bin/brew ]]; then
+    echo "==> Installing Homebrew to ${HOMEBREW_PREFIX} (custom prefix)"
+    mkdir -p "${HOMEBREW_PREFIX}"
+    curl -L https://github.com/Homebrew/brew/tarball/master \
+      | tar xz --strip 1 -C "${HOMEBREW_PREFIX}"
+  fi
 else
-  echo "==> Installing default Homebrew"
-  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  if ! command -v brew &>/dev/null; then
+    echo "==> Installing Homebrew (default location)"
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  fi
+  if [[ -x /opt/homebrew/bin/brew ]]; then
+    HOMEBREW_PREFIX=/opt/homebrew
+  elif [[ -x /usr/local/bin/brew ]]; then
+    HOMEBREW_PREFIX=/usr/local
+  else
+    echo "ERROR: brew not found after install" >&2
+    exit 1
+  fi
 fi
 
-export PATH="${HOMEBREW_PREFIX}/bin:${PATH}"
+# brew shellenv sets PATH, MANPATH, HOMEBREW_PREFIX, HOMEBREW_CELLAR, HOMEBREW_REPOSITORY
+eval "$(${HOMEBREW_PREFIX}/bin/brew shellenv)"
 export HOMEBREW_NO_AUTO_UPDATE=1
 export HOMEBREW_NO_ANALYTICS=1
 
