@@ -2,11 +2,18 @@
 #
 # Bootstrap a fresh macOS install from this dotfiles repo.
 #
+# Prerequisites (must be done manually before running):
+#   - Install 1Password.app and configure the SSH agent so `git@github.com:`
+#     URLs authenticate. Brew taps clone from GitHub via SSH.
+#   - If ~/.gitconfig.local has machine-specific overrides (insteadOf etc.),
+#     put it in place before running.
+#
 # Steps:
 #   1. Install macOS CLI tools (xcode-select)
 #   2. Install Homebrew (default location, or HOMEBREW_PREFIX if set)
-#   3. Install brew formulae and casks
-#   4. Symlink dotfiles into ~ and ~/.config
+#   3. Symlink dotfiles into ~ and ~/.config (must happen before brew taps
+#      so .gitconfig is active when git clones from GitHub)
+#   4. Install brew formulae and casks
 #   5. Point iTerm2 at the prefs in this repo
 #   6. Trigger initial neovim plugin install
 #
@@ -74,60 +81,7 @@ export HOMEBREW_NO_AUTO_UPDATE=1
 export HOMEBREW_NO_ANALYTICS=1
 
 #
-# 3. Brew packages
-#
-echo "==> Installing brew formulae"
-brew install \
-  automake \
-  bat \
-  cmake \
-  coreutils \
-  deno \
-  expect \
-  fnm \
-  fzf \
-  gh \
-  golangci-lint \
-  helm \
-  htop \
-  httpie \
-  jq \
-  k9s \
-  krew \
-  kustomize \
-  libtool \
-  neovim \
-  pyenv \
-  reattach-to-user-namespace \
-  rust \
-  rustup \
-  starship \
-  telnet \
-  tldr \
-  tmux \
-  tree \
-  uv \
-  wget \
-  yq \
-  zinit \
-  zsh-completions
-
-# Tapped formulae
-brew install cockroachdb/tap/cockroach kptdev/kpt/kpt
-
-echo "==> Installing brew casks"
-brew install --cask \
-  1password \
-  alfred \
-  font-hack-nerd-font \
-  font-jetbrains-mono-nerd-font \
-  font-powerline-symbols \
-  gcloud-cli \
-  iterm2 \
-  jetbrains-toolbox
-
-#
-# 4. Symlinks
+# 3. Symlinks (must happen before brew taps so git config is active)
 #
 echo "==> Symlinking dotfiles"
 
@@ -167,6 +121,58 @@ ln -sfn "${DOTFILES_HOME}/.config/k9s/config.yaml" "${HOME}/.config/k9s/config.y
 ln -sfn "${DOTFILES_HOME}/.config/k9s/skins" "${HOME}/.config/k9s/skins"
 
 #
+# 4. Brew packages
+#
+echo "==> Installing brew formulae"
+brew install \
+  automake \
+  bat \
+  cmake \
+  coreutils \
+  deno \
+  expect \
+  fnm \
+  fzf \
+  gh \
+  golangci-lint \
+  helm \
+  htop \
+  httpie \
+  jq \
+  k9s \
+  krew \
+  kustomize \
+  libtool \
+  neovim \
+  pyenv \
+  reattach-to-user-namespace \
+  rust \
+  rustup \
+  starship \
+  telnet \
+  tldr \
+  tmux \
+  tree \
+  uv \
+  wget \
+  yq \
+  zinit \
+  zsh-completions
+
+# Tapped formulae (these clone from GitHub via SSH)
+brew install cockroachdb/tap/cockroach kptdev/kpt/kpt
+
+echo "==> Installing brew casks"
+brew install --cask \
+  alfred \
+  font-hack-nerd-font \
+  font-jetbrains-mono-nerd-font \
+  font-powerline-symbols \
+  gcloud-cli \
+  iterm2 \
+  jetbrains-toolbox
+
+#
 # 5. iTerm2 preferences
 #
 echo "==> Configuring iTerm2 to load prefs from repo"
@@ -197,7 +203,6 @@ cat <<'EOF'
 ==> Setup complete.
 
 Manual next steps:
-  - Sign in to 1Password and import SSH keys / GitHub credentials.
   - Sign in to gcloud:  gcloud auth login
   - Sign in to GitHub CLI:  gh auth login
   - Open a new terminal so zinit can install zsh plugins on first launch.
