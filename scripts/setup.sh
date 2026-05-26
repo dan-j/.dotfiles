@@ -31,10 +31,24 @@ fi
 # 2. Homebrew
 #
 # If HOMEBREW_PREFIX is set by the user before running, install via tarball
-# into that prefix (no sudo). Otherwise run the official installer, which
-# picks /opt/homebrew on Apple Silicon and /usr/local on Intel; we then
-# detect where it landed.
+# into that prefix (no sudo). Otherwise check the standard locations for an
+# existing install; if none is found, run the official installer which picks
+# /opt/homebrew on Apple Silicon and /usr/local on Intel.
 #
+# PATH isn't configured yet at this point, so `command -v brew` is unreliable
+# — probe the filesystem instead.
+#
+detect_brew_prefix() {
+  local prefix
+  for prefix in /opt/homebrew /usr/local "$HOME/homebrew"; do
+    if [[ -x "$prefix/bin/brew" ]]; then
+      printf '%s' "$prefix"
+      return 0
+    fi
+  done
+  return 1
+}
+
 if [[ -n ${HOMEBREW_PREFIX:-} ]]; then
   if [[ ! -x ${HOMEBREW_PREFIX}/bin/brew ]]; then
     echo "==> Installing Homebrew to ${HOMEBREW_PREFIX} (custom prefix)"
@@ -43,21 +57,18 @@ if [[ -n ${HOMEBREW_PREFIX:-} ]]; then
       | tar xz --strip 1 -C "${HOMEBREW_PREFIX}"
   fi
 else
-  if ! command -v brew &>/dev/null; then
+  HOMEBREW_PREFIX=$(detect_brew_prefix || true)
+  if [[ -z "$HOMEBREW_PREFIX" ]]; then
     echo "==> Installing Homebrew (default location)"
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-  fi
-  if [[ -x /opt/homebrew/bin/brew ]]; then
-    HOMEBREW_PREFIX=/opt/homebrew
-  elif [[ -x /usr/local/bin/brew ]]; then
-    HOMEBREW_PREFIX=/usr/local
-  else
-    echo "ERROR: brew not found after install" >&2
-    exit 1
+    HOMEBREW_PREFIX=$(detect_brew_prefix) || {
+      echo "ERROR: brew not found after install" >&2
+      exit 1
+    }
   fi
 fi
 
-# brew shellenv sets PATH, MANPATH, HOMEBREW_PREFIX, HOMEBREW_CELLAR, HOMEBREW_REPOSITORY
+# brew shellenv sets PATH, MANPATH, HOMEBREW_PREFIX, HOMEBREW_CELLAR, HOMEBREW_REPOSITORY, FPATH, INFOPATH
 eval "$(${HOMEBREW_PREFIX}/bin/brew shellenv)"
 export HOMEBREW_NO_AUTO_UPDATE=1
 export HOMEBREW_NO_ANALYTICS=1
