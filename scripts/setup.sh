@@ -16,7 +16,6 @@ set -euo pipefail
 
 SCRIPTS_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 DOTFILES_HOME=${DOTFILES_HOME:-${HOME}/.dotfiles}
-HOMEBREW_PREFIX=${HOMEBREW_PREFIX:-${HOME}/homebrew}
 
 #
 # 1. macOS Command Line Tools
@@ -31,11 +30,14 @@ fi
 #
 # 2. Homebrew (custom prefix at ~/homebrew)
 #
-if [[ ! -x ${HOMEBREW_PREFIX}/bin/brew ]]; then
+if [[ -n ${HOMEBREW_PREFIX} ]]; then
   echo "==> Installing Homebrew to ${HOMEBREW_PREFIX}"
   mkdir -p "${HOMEBREW_PREFIX}"
   curl -L https://github.com/Homebrew/brew/tarball/master \
     | tar xz --strip 1 -C "${HOMEBREW_PREFIX}"
+else
+  echo "==> Installing default Homebrew"
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 fi
 
 export PATH="${HOMEBREW_PREFIX}/bin:${PATH}"
