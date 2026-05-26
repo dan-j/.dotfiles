@@ -12,7 +12,8 @@
 #   - and iTerm2 is configured to send [1;9A -> [1;9D for option + arrow keys
 # then uncomment the following line to make Meta + arrow keys mapping work
 #set -ga terminal-overrides "*:kUP3=\e[1;9A,*:kDN3=\e[1;9B,*:kRIT3=\e[1;9C,*:kLFT3=\e[1;9D"
-
+set -s escape-time 10
+set -g xterm-keys on
 
 # -- windows & pane creation ---------------------------------------------------
 
@@ -157,12 +158,12 @@ tmux_conf_theme_right_separator_sub=''  #   PowerlineSymbols.otf font
 #     - #{uptime_s}
 #     - #{username}
 #     - #{username_ssh}
-tmux_conf_theme_status_left='#(/bin/bash $HOME/.tmux/kube-tmux/kube.tmux 0 red cyan) | ❐ #S | ↑#{?uptime_d, #{uptime_d}d,}#{?uptime_h, #{uptime_h}h,}#{?uptime_m, #{uptime_m}m,} '
+tmux_conf_theme_status_left='#(/bin/bash $HOME/.tmux/plugins/kube-tmux/kube.tmux 255 white,bold white,nobold) | ❐ #S | ↑#{?uptime_d, #{uptime_d}d,}#{?uptime_h, #{uptime_h}h,}#{?uptime_m, #{uptime_m}m,} '
 tmux_conf_theme_status_right='#{prefix}#{pairing} #{?battery_status, #{battery_status},}#{?battery_bar, #{battery_bar},}#{?battery_percentage, #{battery_percentage},} , %R , %d %b | #{username}#{root} | #{hostname} '
 
 # status left style
 tmux_conf_theme_status_left_fg='#000000,#000000,#e4e4e4,#e4e4e4'  # white, black, white , white
-tmux_conf_theme_status_left_bg='#ffffff,#ffff00,#ff00af,#00afff'  # k8s-blue, yellow, pink, white blue
+tmux_conf_theme_status_left_bg='#306ce6,#ffff00,#ff00af,#00afff'  # k8s-blue, yellow, pink, white blue
 tmux_conf_theme_status_left_attr='none,bold,none,none'
 
 # status right style
@@ -245,6 +246,10 @@ tmux_conf_copy_to_os_clipboard=true
 # -- user customizations -------------------------------------------------------
 # this is the place to override or undo settings
 
+# fix: mouse drag misses last character in tmux 3.3+ — move cursor right before copying
+bind -T copy-mode    MouseDragEnd1Pane send -X cursor-right \; send -X copy-pipe-and-cancel "pbcopy"
+bind -T copy-mode-vi MouseDragEnd1Pane send -X cursor-right \; send -X copy-pipe-and-cancel "pbcopy"
+
 # syncrhonize-panes
 bind b setw synchronize-panes on
 bind B setw synchronize-panes off
@@ -293,6 +298,7 @@ bind u run ~/.tmux/custom/tmux-url-select/tmux-url-select
 set -g @plugin 'tmux-plugins/tpm'
 set -g @plugin 'tmux-plugins/tmux-resurrect'
 set -g @plugin 'tmux-plugins/tmux-better-mouse-mode'
+set -g @plugin 'jonmosco/kube-tmux'
 
 # Initialize TMUX plugin manager (keep this line at the very bottom of tmux.conf)
 run '~/.tmux/plugins/tpm/tpm'

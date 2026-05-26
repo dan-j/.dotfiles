@@ -1,100 +1,174 @@
 #!/bin/bash
+#
+# Bootstrap a fresh macOS install from this dotfiles repo.
+#
+# Steps:
+#   1. Install macOS CLI tools (xcode-select)
+#   2. Install Homebrew into ~/homebrew (custom prefix)
+#   3. Install brew formulae and casks
+#   4. Symlink dotfiles into ~ and ~/.config
+#   5. Point iTerm2 at the prefs in this repo
+#   6. Trigger initial neovim plugin install
+#
+# Re-running is safe; existing files are backed up to <name>.bak.
 
-set -e
+set -euo pipefail
 
-if [ -f /etc/profile ]; then source /etc/profile; fi
-
-### VARIABLES ###
-
-SCRIPTS_DIR=$(dirname ${BASH_SOURCE[0]})
+SCRIPTS_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 DOTFILES_HOME=${DOTFILES_HOME:-${HOME}/.dotfiles}
-OHMYZSH_URL=https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh
-BREW_URL=https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh
+HOMEBREW_PREFIX=${HOMEBREW_PREFIX:-${HOME}/homebrew}
 
-DOTFILES_CLONE_URL=git@github.com:dan-j/.dotfiles.git
-
-### PREREQUISTITES ###
-cli_tools_path=$(xcode-select -p)
-
-if [[ -z $cli_tools_path ]] || [[ -f $cli_tools_path ]]; then
-  echo "Installing MacOS Command Line Tools"
+#
+# 1. macOS Command Line Tools
+#
+if ! xcode-select -p &>/dev/null; then
+  echo "==> Installing macOS Command Line Tools"
   xcode-select --install
+  echo "Re-run this script once xcode-select finishes."
+  exit 0
 fi
 
-### INSTALL ###
-
-/bin/bash -c "$(curl -fsSL $BREW_URL)"
-
-BREW_TAPS="caskroom/cask caskroom/versions caskroom/fonts"
-
-CASK_PACKAGES="java8 iterm2 font-hack 1password 1password-cli alfred"
-BREW_PACKAGES="coreutils git zsh tmux wget jq nvm python2 python3 pyenv httpie htop reattach-to-user-namespace yarn vim mongodb mysql kubernetes-helm kubernetes-cli jwt-cli"
-
-### SETUP ###
-
-# echo $BREW_TAPS | xargs -n1 brew tap
-brew install --cask $CASK_PACKAGES
-brew install $BREW_PACKAGES
-
-sh -c "$(wget ${OHMYZSH_URL} -O -)"
-
-# insert "source ~/.zshrc.extras" before sourcing oh-my-zsh
-sed -i '' '/source $ZSH\/oh-my-zsh.sh/i\
-source ~/.zshrc.extras\
-' ~/.zshrc
-
-# we always want a projects directory
-mkdir -p ${HOME}/projects
-
-# setup 1password-cli
-echo -n "1Password Address: "; read one_password_addr
-
-echo -n "1Password Email: "; read one_password_email
-
-echo -n "1Password Secret Key: ";
-# suppress password being displayed on screen and re-enable afterwards
-stty -echo; read one_password_secret; stty echo; echo
-
-token_1password=$(
-  op signin --output=raw \
-    $one_password_addr $one_password_email $one_password_secret
-)
-
-if [ -d "${HOME}/.ssh" ]; then
-  mv ${HOME}/.ssh ${HOME}/.ssh_bak
+#
+# 2. Homebrew (custom prefix at ~/homebrew)
+#
+if [[ ! -x ${HOMEBREW_PREFIX}/bin/brew ]]; then
+  echo "==> Installing Homebrew to ${HOMEBREW_PREFIX}"
+  mkdir -p "${HOMEBREW_PREFIX}"
+  curl -L https://github.com/Homebrew/brew/tarball/master \
+    | tar xz --strip 1 -C "${HOMEBREW_PREFIX}"
 fi
 
-OP_SESSION_danandches=${token_1password} \
-  op get document ssh_keys.tar.gz | tar x -C ${HOME}
+export PATH="${HOMEBREW_PREFIX}/bin:${PATH}"
+export HOMEBREW_NO_AUTO_UPDATE=1
+export HOMEBREW_NO_ANALYTICS=1
 
-if [[ ! -d ${DOTFILES_HOME} ]]; then
-  git clone ${DOTFILES_CLONE_URL} ${DOTFILES_HOME}
-fi
+#
+# 3. Brew packages
+#
+echo "==> Installing brew formulae"
+brew install \
+  automake \
+  bat \
+  cmake \
+  coreutils \
+  deno \
+  expect \
+  fnm \
+  fzf \
+  gh \
+  golangci-lint \
+  helm \
+  htop \
+  httpie \
+  jq \
+  k9s \
+  krew \
+  kustomize \
+  libtool \
+  neovim \
+  pyenv \
+  reattach-to-user-namespace \
+  rust \
+  rustup \
+  starship \
+  telnet \
+  tldr \
+  tmux \
+  tree \
+  uv \
+  wget \
+  yq \
+  zinit \
+  zsh-completions
 
-# Setup vim Plug and install plugins
-curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
-    https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-vim +PlugInstall +qall
+# Tapped formulae
+brew install cockroachdb/tap/cockroach kptdev/kpt/kpt
 
-dotfiles=$(
-  find ${DOTFILES_HOME} -name ".*" -maxdepth 1 -exec basename {} \; \
-    | tail +2 \
-    | grep -vE ".git(modules)?$"
-)
+echo "==> Installing brew casks"
+brew install --cask \
+  1password \
+  alfred \
+  font-hack-nerd-font \
+  font-jetbrains-mono-nerd-font \
+  font-powerline-symbols \
+  gcloud-cli \
+  iterm2 \
+  jetbrains-toolbox
 
-for dotfile in $dotfiles; do
-  if [[ -a ${HOME}/$dotfile ]]; then
-    mv ${HOME}/$dotfile ${HOME}/${dotfile}.bak
-  fi
-  ln -s ${DOTFILES_HOME}/$dotfile $HOME
+#
+# 4. Symlinks
+#
+echo "==> Symlinking dotfiles"
+
+# Top-level dotfiles
+TOP_LEVEL=( .gitconfig .osx .tmux.conf.local .zshrc .zshrc.extras )
+for f in "${TOP_LEVEL[@]}"; do
+  src="${DOTFILES_HOME}/${f}"
+  dst="${HOME}/${f}"
+  [[ -e ${dst} && ! -L ${dst} ]] && mv "${dst}" "${dst}.bak"
+  ln -sfn "${src}" "${dst}"
 done
 
-# don't forget tmux.conf
-ln -s ${HOME}/.tmux/.tmux.conf ${HOME}
+# ~/.config: symlink whole directories where there's no app-managed state,
+# symlink individual files where there is.
+mkdir -p "${HOME}/.config"
 
-# Specify the preferences directory
+# Whole-directory symlinks (no app-managed state we want to preserve)
+for dir in nvim htop; do
+  src="${DOTFILES_HOME}/.config/${dir}"
+  dst="${HOME}/.config/${dir}"
+  [[ -e ${dst} && ! -L ${dst} ]] && mv "${dst}" "${dst}.bak"
+  ln -sfn "${src}" "${dst}"
+done
+
+# Single-file symlinks
+ln -sfn "${DOTFILES_HOME}/.config/starship.toml" "${HOME}/.config/starship.toml"
+
+mkdir -p "${HOME}/.config/git"
+ln -sfn "${DOTFILES_HOME}/.config/git/ignore" "${HOME}/.config/git/ignore"
+
+# k9s — preserve ~/.config/k9s/clusters/ state
+mkdir -p "${HOME}/.config/k9s"
+ln -sfn "${DOTFILES_HOME}/.config/k9s/aliases.yaml" "${HOME}/.config/k9s/aliases.yaml"
+ln -sfn "${DOTFILES_HOME}/.config/k9s/config.yaml" "${HOME}/.config/k9s/config.yaml"
+[[ -e ${HOME}/.config/k9s/skins && ! -L ${HOME}/.config/k9s/skins ]] && \
+  mv "${HOME}/.config/k9s/skins" "${HOME}/.config/k9s/skins.bak"
+ln -sfn "${DOTFILES_HOME}/.config/k9s/skins" "${HOME}/.config/k9s/skins"
+
+#
+# 5. iTerm2 preferences
+#
+echo "==> Configuring iTerm2 to load prefs from repo"
 defaults write com.googlecode.iterm2.plist PrefsCustomFolder -string "${DOTFILES_HOME}/iterm2"
-# Tell iTerm2 to use the custom preferences in the directory
 defaults write com.googlecode.iterm2.plist LoadPrefsFromCustomFolder -bool true
 
-exec "${DOTFILES_HOME}/scripts/post_setup.zsh"
+#
+# 6. Neovim plugins (lazy.nvim will bootstrap itself on first run)
+#
+echo "==> Installing neovim plugins"
+nvim --headless "+Lazy! sync" +qa || true
+
+#
+# 7. macOS preferences
+#
+if [[ -x ${DOTFILES_HOME}/.osx ]]; then
+  echo "==> Applying macOS preferences (.osx)"
+  "${DOTFILES_HOME}/.osx"
+fi
+
+#
+# 8. Projects directory
+#
+mkdir -p "${HOME}/projects"
+
+cat <<'EOF'
+
+==> Setup complete.
+
+Manual next steps:
+  - Sign in to 1Password and import SSH keys / GitHub credentials.
+  - Sign in to gcloud:  gcloud auth login
+  - Sign in to GitHub CLI:  gh auth login
+  - Open a new terminal so zinit can install zsh plugins on first launch.
+  - Verify the iTerm2 profile loaded from this repo (Settings → General → Preferences).
+EOF

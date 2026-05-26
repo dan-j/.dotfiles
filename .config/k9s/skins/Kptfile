@@ -1,0 +1,18 @@
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: skins
+upstream:
+  type: git
+  git:
+    repo: git@github.com:derailed/k9s
+    directory: /skins
+    ref: master
+  updateStrategy: resource-merge
+upstreamLock:
+  type: git
+  git:
+    repo: git@github.com:derailed/k9s
+    directory: /skins
+    ref: master
+    commit: 0da2636cc324b1d78ba120d21bf5831f8027f5c3

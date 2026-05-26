@@ -1,50 +1,103 @@
-# generic env vars
-export EDITOR=vim
-export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#3c5d64"
-export USE_GKE_GCLOUD_AUTH_PLUGIN=true
-export XDG_CONFIG_HOME=$HOME/.config
-export GOPATH=${GOPATH-$(go env GOPATH)}
-export GOROOT=${GOROOT-$(go env GOROOT)}
-export GOPRIVATE=versori.dev,github.com/versori
+alias cat=bat
+alias fzf='fzf --preview "bat --color=always --style=numbers --line-range=:500 {}"'
+alias less="less -R"
+alias ls="gls --color=auto"
+alias ll="ls -lrt"
+alias vim=nvim
+alias gmtv=go mod tidy && go mod vendor
 
-export PATH=$GOPATH/bin:$PATH
-export PATH=$GOROOT/misc/wasm:$PATH
-export PATH=/opt/homebrew/opt/gnu-sed/libexec/gnubin:$PATH
+export HOMEBREW_PREFIX=~/homebrew
+export PATH=$PATH:$HOMEBREW_PREFIX/bin
 
-# configure history
-setopt SHARE_HISTORY
-HISTFILE=$HOME/.zhistory
-SAVEHIST=1000
-HISTSIZE=999
-setopt HIST_EXPIRE_DUPS_FIRST
+source $(brew --prefix)/opt/zinit/zinit.zsh
 
+export BAT_THEME="Monokai Extended"
+export HOMEBREW_NO_AUTO_UPDATE=1
+export HOMEBREW_NO_ANALYTICS=1
+export EDITOR=nvim
+export MANPAGER="bat -plman"
 
-# enable completion
+export XDG_DATA_HOME=${HOME}/.local/share
+export XDG_CONFIG_HOME=${HOME}/.config
+export XDG_STATE_HOME=${HOME}/.local/state
+
+export GOPRIVATE=github.com/versori/,versori.dev/
+
+source "$(brew --prefix)/share/google-cloud-sdk/path.zsh.inc"
+source "$(brew --prefix)/share/google-cloud-sdk/completion.zsh.inc"
+
+export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"
+export FPATH="$(brew --prefix)/share/zsh-completions:$FPATH"
+
+eval "$(gdircolors -b)"
+
+eval "$(fnm env --use-on-cd --shell zsh)"
+
+eval "$(starship init zsh)"
+
+zinit snippet OMZL::git.zsh
+zinit snippet OMZP::git
+zinit snippet OMZP::brew
+zinit snippet OMZP::gh
+zinit snippet OMZP::k9s
+zinit snippet OMZP::kubectl
+zinit snippet OMZP::docker
+
 autoload -Uz compinit && compinit
+autoload -U select-word-style && select-word-style bash
+autoload -z edit-command-line
+zle -N edit-command-line
+bindkey "^X^E" edit-command-line
 
+zinit light Aloxaf/fzf-tab
+zinit light zdharma-continuum/fast-syntax-highlighting
+zinit light zsh-users/zsh-autosuggestions
+zinit light zsh-users/zsh-history-substring-search
 
-## configure additional tools
+zinit cdreplay -q
 
-# node
-nvm use node
+HISTORY_SUBSTRING_SEARCH_HIGHLIGHT_FOUND='fg=green,bold'
+HISTORY_SUBSTRING_SEARCH_HIGHLIGHT_NOT_FOUND='fg=red,bold'
 
-# pyenv
-if [[ ! $(which pyenv) ]]; then
-	eval "$(pyenv init -)"
-	eval "$(pyenv virtualenv-init -)"
+bindkey "^[[A" history-substring-search-up    # search history with up key
+bindkey "^[[B" history-substring-search-down  # search history with down key
+
+HISTSIZE=10000
+HISTFILE=~/.zsh_history
+SAVEHIST=$HISTSIZE
+HISTDUP=erase
+setopt appendhistory
+setopt sharehistory
+setopt hist_ignore_space
+setopt hist_ignore_all_dups
+setopt hist_save_no_dups
+setopt hist_find_no_dups
+
+#######################################################
+## Completion styling
+########################################################
+
+zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
+zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
+zstyle ':completion:*' menu no
+zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls --color $realpath'
+zstyle ':fzf-tab:complete:__zoxide_z:*' fzf-preview 'ls --color $realpath'
+zstyle ':completion:*:*:docker:*' option-stacking yes
+zstyle ':completion:*:*:docker-*:*' option-stacking yes
+
+# JetBrains JediTerm sends ESC for Cmd/Alt keys, which conflicts with vi mode
+# (corrupts selections on Cmd+C, triggers vi command mode on Alt+arrow).
+# Use emacs mode there instead, with equivalent word-navigation bindings.
+if [[ "$TERMINAL_EMULATOR" == *JetBrains* ]]; then
+  bindkey -e
+  bindkey '^[[1;3C' forward-word   # Alt-Right
+  bindkey '^[[1;3D' backward-word  # Alt-Left
+  bindkey '^[[1;3A' history-substring-search-up    # Alt-Up (optional)
+  bindkey '^[[1;3B' history-substring-search-down  # Alt-Down (optional)
+else
+  # Make Option-Left/Right work with zsh vi mode, including tmux.
+  bindkey -M viins '^[b' backward-word
+  bindkey -M viins '^[f' forward-word
+  bindkey -M viins '^[^?' backward-kill-word
+  bindkey -M viins '^[^H' backward-kill-word
 fi
-
-# helm
-if [ $commands[helm] ]; then
-  source <(helm completion zsh)
-fi
-
-
-## aliases
-alias https="http --default-scheme https"
-
-killp () {
-	lsof -i :$1 | tail +2 | awk '{print $2}' | xargs kill
-}
-
-alias gmtv="go mod tidy && go mod vendor"
