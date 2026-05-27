@@ -160,7 +160,11 @@ brew install \
   zsh-completions
 
 # Tapped formulae (these clone from GitHub via SSH)
-brew install cockroachdb/tap/cockroach kptdev/kpt/kpt
+brew install cockroachdb/tap/cockroach
+
+# kpt moved repos; tap it with the explicit URL before installing
+brew tap kptdev/kpt https://github.com/kptdev/kpt.git
+brew install kpt
 
 echo "==> Installing brew casks"
 brew install --cask \
