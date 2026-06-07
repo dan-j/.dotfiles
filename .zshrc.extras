@@ -6,7 +6,7 @@ alias ll="ls -lrt"
 alias vim=nvim
 alias gmtv=go mod tidy && go mod vendor
 
-# Detect Homebrew location and put it on PATH.
+# Detect Homebrew location and configure the shell.
 for _brew_prefix in /opt/homebrew /usr/local $HOME/homebrew; do
   if [[ -x "$_brew_prefix/bin/brew" ]]; then
     eval "$($_brew_prefix/bin/brew shellenv)"
@@ -32,7 +32,10 @@ export GOPRIVATE=github.com/versori/,versori.dev/
 source "$(brew --prefix)/share/google-cloud-sdk/path.zsh.inc"
 source "$(brew --prefix)/share/google-cloud-sdk/completion.zsh.inc"
 
-export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"
+export PATH=${HOME}/.cargo/bin:${PATH}
+export PATH=$(brew --prefix rustup)/bin:${PATH}
+export PATH="${KREW_ROOT:-$HOME/.krew}/bin:${PATH}"
+
 export FPATH="$(brew --prefix)/share/zsh-completions:$FPATH"
 
 eval "$(gdircolors -b)"
@@ -65,8 +68,18 @@ zinit cdreplay -q
 HISTORY_SUBSTRING_SEARCH_HIGHLIGHT_FOUND='fg=green,bold'
 HISTORY_SUBSTRING_SEARCH_HIGHLIGHT_NOT_FOUND='fg=red,bold'
 
-bindkey "^[[A" history-substring-search-up    # search history with up key
-bindkey "^[[B" history-substring-search-down  # search history with down key
+# Emacs-mode keybindings. ^A/^E, ^[b/^[f, ^[^? are bound by default; we add
+# the xterm-style sequences for Home/End and Alt-arrows that some terminals
+# (JediTerm, modern xterm) send instead.
+bindkey -e
+bindkey '^[[H'    beginning-of-line              # Home
+bindkey '^[[F'    end-of-line                    # End
+bindkey '^[[A'    history-substring-search-up    # Up
+bindkey '^[[B'    history-substring-search-down  # Down
+bindkey '^[[1;3D' backward-word                  # Alt-Left
+bindkey '^[[1;3C' forward-word                   # Alt-Right
+bindkey '^[[1;3A' history-substring-search-up    # Alt-Up
+bindkey '^[[1;3B' history-substring-search-down  # Alt-Down
 
 HISTSIZE=10000
 HISTFILE=~/.zsh_history
@@ -91,19 +104,3 @@ zstyle ':fzf-tab:complete:__zoxide_z:*' fzf-preview 'ls --color $realpath'
 zstyle ':completion:*:*:docker:*' option-stacking yes
 zstyle ':completion:*:*:docker-*:*' option-stacking yes
 
-# JetBrains JediTerm sends ESC for Cmd/Alt keys, which conflicts with vi mode
-# (corrupts selections on Cmd+C, triggers vi command mode on Alt+arrow).
-# Use emacs mode there instead, with equivalent word-navigation bindings.
-if [[ "$TERMINAL_EMULATOR" == *JetBrains* ]]; then
-  bindkey -e
-  bindkey '^[[1;3C' forward-word   # Alt-Right
-  bindkey '^[[1;3D' backward-word  # Alt-Left
-  bindkey '^[[1;3A' history-substring-search-up    # Alt-Up (optional)
-  bindkey '^[[1;3B' history-substring-search-down  # Alt-Down (optional)
-else
-  # Make Option-Left/Right work with zsh vi mode, including tmux.
-  bindkey -M viins '^[b' backward-word
-  bindkey -M viins '^[f' forward-word
-  bindkey -M viins '^[^?' backward-kill-word
-  bindkey -M viins '^[^H' backward-kill-word
-fi
